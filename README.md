@@ -1,144 +1,95 @@
-# 📝 NLPipeline-Agent
+# NLPipeline Agent
 
-> End-to-end NLP pipeline with named entity recognition, sentiment analysis, and summarization powered by MiMo V2.5
-
-## Why This Exists
-
-Natural Language Processing is not a single task — it's an interconnected chain of capabilities. Tokenizing text, extracting entities, gauging sentiment, and generating summaries each require different models, different training approaches, and different evaluation metrics. Stitching these into a cohesive pipeline usually means maintaining five different model servers, dealing with five different APIs, and reconciling five different tokenization schemes.
-
-NLPipeline-Agent unifies the entire NLP stack under a single MiMo V2.5 agent that **reasons about text holistically**. Instead of running independent models that ignore each other's outputs, the agent uses entity extraction to improve sentiment analysis (understanding that "Apple" the company is different from "apple" the fruit), and uses both to produce more grounded, factual summaries. Every stage benefits from the intelligence of every other stage.
-
-Perfect for teams processing customer feedback at scale, analyzing legal documents, monitoring brand sentiment, or building knowledge graphs from unstructured text. NLPipeline-Agent delivers production-grade NLP without the complexity of managing a model zoo.
-
-## Architecture
-
-```
-┌──────────┐     ┌──────────┐     ┌────────┐     ┌───────────┐     ┌─────────┐
-│   TEXT   │────▶│ TOKENIZER│────▶│  NER   │────▶│ SENTIMENT │────▶│ SUMMARY │
-│          │     │          │     │        │     │           │     │         │
-│ • Social │     │ • BPE    │     │ • Name │     │ • Positive│     │ • Abstr │
-│ • Support│     │ • Subword│     │ • Org  │     │ • Negative│     │ • Extrac│
-│ • Legal  │     │ • Lemmat │     │ • Loc  │     │ • Neutral │     │ • Bullet│
-│ • News   │     │ • POS    │     │ • Custom│    │ • Emotion │     │ • Key   │
-└──────────┘     └──────────┘     └────────┘     └───────────┘     └─────────┘
-
-    MiMo V2.5 Agent chains NLP stages with cross-stage context sharing
-```
-
-## Token Consumption Model
-
-| Stage | Description | Tokens/Run | Avg Latency | Cost Estimate |
-|-------|-------------|------------|-------------|---------------|
-| **Tokenizer** | Tokenization, POS tagging, lemmatization, dependency parsing | 50K | 2s | $0.02 |
-| **NER** | Named entity recognition, entity linking, relation extraction | 400K | 15s | $0.16 |
-| **Sentiment** | Sentiment analysis, emotion detection, aspect-based sentiment | 200K | 8s | $0.08 |
-| **Summary** | Abstractive summarization, key point extraction, compression | 300K | 12s | $0.12 |
-| **Total** | Full NLP pipeline | **950K** | **37s** | **$0.38** |
-
-*Token estimates for processing a 2,000-word document. Scales with input length.*
+A fully functional, rule-based NLP text processor running entirely in the browser. No external libraries or APIs required — all processing is done with vanilla JavaScript.
 
 ## Features
 
-- **Holistic Text Understanding** — Each pipeline stage shares context with subsequent stages for more accurate results
-- **Custom NER Training** — Define and train custom entity types with minimal labeled examples
-- **Aspect-Based Sentiment** — Extracts sentiment toward specific entities, not just document-level polarity
-- **Multi-Style Summarization** — Generates executive summaries, bullet points, or detailed digests as needed
-- **Multi-Language Support** — Handles 30+ languages with automatic language detection
-- **Streaming Processing** — Process text as it arrives for real-time social media monitoring
-- **Batch Mode** — High-throughput batch processing for document archives
-- **Entity Knowledge Graph** — Builds interconnected entity graphs from processed documents
-- **Negation & Sarcasm Detection** — Handles linguistic nuances that trip up simpler NLP systems
-- **Pipeline Customization** — Enable/disable stages, reorder processing, inject custom components
+### 📝 NLP Processing Pipeline
 
-## Tech Stack
+The application runs a 5-stage NLP pipeline on any input text:
 
-- **Runtime**: Python 3.11+
-- **Agent Engine**: MiMo V2.5 (Nous Research)
-- **Tokenization**: Hugging Face Tokenizers, SentencePiece
-- **NER**: spaCy, Flair NER, MiMo NER fine-tuned model
-- **Sentiment**: VADER, TextBlob, custom transformer classifier
-- **Summarization**: BART, PEGASUS, MiMo summarization model
-- **Embeddings**: sentence-transformers, OpenAI Ada
-- **Core NLP**: NLTK, stanza, Hugging Face Transformers
-- **API**: FastAPI with streaming SSE support
-- **Storage**: PostgreSQL, Redis (caching)
-- **Task Queue**: Celery for batch processing
+1. **🔤 Tokenization** — Splits text into individual words and punctuation with character positions
+2. **🏷️ POS Tagging** — Tags each word with its part-of-speech (nouns, verbs, adjectives, adverbs, determiners, prepositions, pronouns, conjunctions) using rule-based heuristics and a built-in lexicon
+3. **🔍 Named Entity Recognition** — Extracts person names, organizations, and locations using pattern matching, title detection, and known entity lists
+4. **😊 Sentiment Analysis** — Keyword-based sentiment scoring with support for negation handling, intensifiers, and contextual modifiers
+5. **📝 Extractive Summary** — Scores sentences by multiple heuristics (position, length, entities, sentiment, verbs) and extracts the most informative ones
 
-## Quick Start
+### 🎨 Visual Pipeline
 
-```bash
-# Install NLPipeline-Agent
-pip install nlpipeline-agent
+Each processing stage is visualized with an animated pipeline showing:
+- Real-time stage status (waiting → processing → done)
+- Smooth animations and transitions
+- Color-coded results at each stage
 
-# Process text through the full pipeline
-nlpipeline process "Our customers love the new features but the mobile app crashes frequently."
+### 📊 Rich Results Display
 
-# Run specific stages
-nlpipeline tokenize "Complex linguistical analysis requires careful tokenization."
-nlpipeline ner --file document.txt --custom-entities "product,feature,bug"
-nlpipeline sentiment --aspect "mobile app" --input feedback.json
-nlpipeline summarize --file research_paper.pdf --style bullets --max-words 200
+- **Tokenization**: Visual token grid with character positions
+- **POS Tagging**: Color-coded token chips + bar chart distribution
+- **NER**: Entity cards with type badges (Person/Organization/Location) and context snippets
+- **Sentiment**: Visual gauge, score display, and categorized word lists
+- **Summary**: Sentence highlighting with importance scores and extracted summary
 
-# Start the API server
-nlpipeline serve --port 8000
+## Usage
 
-# Process a batch of documents
-nlpipeline batch ./documents/ --output ./results/ --pipeline full
-```
+1. Open `index.html` in any modern web browser
+2. Type or paste text into the input area
+3. Click **▶ Process Text** (or press `Ctrl+Enter`)
+4. Watch the pipeline process each stage with visual feedback
+5. Review detailed results for each NLP stage
 
-## Project Structure
+### Sample Texts
 
-```
-NLPipeline-Agent/
-├── README.md
-├── pyproject.toml
-├── pipelines/
-│   ├── full_pipeline.yaml        # Default full pipeline config
-│   ├── sentiment_only.yaml       # Sentiment-focused pipeline
-│   └── custom_pipeline.yaml      # User-customizable template
-├── src/
-│   ├── __init__.py
-│   ├── agent/
-│   │   ├── pipeline.py           # MiMo V2.5 pipeline orchestrator
-│   │   ├── planner.py            # Stage planning and routing
-│   │   ├── reasoner.py           # Cross-stage reasoning engine
-│   │   └── context.py            # Shared context manager
-│   ├── tokenizer/
-│   │   ├── engine.py             # Tokenization engine
-│   │   ├── pos_tagger.py         # Part-of-speech tagging
-│   │   ├── lemmatizer.py         # Lemmatization
-│   │   └── dep_parser.py         # Dependency parsing
-│   ├── ner/
-│   │   ├── recognizer.py         # Named entity recognizer
-│   │   ├── linker.py             # Entity linking to knowledge base
-│   │   ├── relation.py           # Relation extraction
-│   │   └── custom_entities.py    # Custom entity type training
-│   ├── sentiment/
-│   │   ├── analyzer.py           # Document-level sentiment
-│   │   ├── aspect.py             # Aspect-based sentiment
-│   │   ├── emotion.py            # Emotion classification
-│   │   └── sarcasm.py            # Sarcasm/irony detection
-│   ├── summarizer/
-│   │   ├── abstractive.py        # Abstractive summarization
-│   │   ├── extractive.py         # Key sentence extraction
-│   │   ├── key_points.py         # Key point generation
-│   │   └── compression.py        # Controlled length compression
-│   └── utils/
-│       ├── lang_detect.py        # Language detection
-│       ├── knowledge_graph.py    # Entity graph builder
-│       └── metrics.py            # Pipeline quality metrics
-├── models/                       # Fine-tuned model weights
-├── tests/
-│   ├── test_tokenizer.py
-│   ├── test_ner.py
-│   ├── test_sentiment.py
-│   ├── test_summarizer.py
-│   └── test_integration.py
-├── api/
-│   └── main.py                   # FastAPI endpoints
-└── Dockerfile
-```
+Click **📄 Load Sample** to load pre-written sample texts that demonstrate various NLP capabilities.
 
----
+## Technical Details
 
-> Built with MiMo V2.5 — [Nous Research](https://nousresearch.com)
+### Architecture
+
+- **Zero dependencies** — No external libraries, frameworks, or APIs
+- **Pure vanilla JS** — ~430 lines of JavaScript
+- **Modern CSS** — Dark theme with CSS custom properties, animations, and responsive design
+- **Single HTML file** — Fully self-contained application
+
+### NLP Components
+
+| Stage | Method | Description |
+|-------|--------|-------------|
+| Tokenizer | Regex-based | Splits on word boundaries, preserves punctuation |
+| POS Tagger | Lexicon + rules | 800+ word lexicon, morphological suffix rules |
+| NER | Pattern matching | Title detection, name lookup, org/loc databases |
+| Sentiment | Keyword scoring | 150+ sentiment words, negation/intensifier handling |
+| Summary | Multi-heuristic | Position, length, entity density, sentiment, action |
+
+### Sentiment Scoring
+
+- Each positive word contributes +1 (or +1.5 with intensifier)
+- Each negative word contributes -1 (or -1.5 with intensifier)
+- Negation reverses the polarity of the following sentiment word
+- Final score is normalized to [-1, 1] range
+- Labels: Positive (>0.15), Negative (<-0.15), Neutral
+
+### Entity Recognition Rules
+
+1. **Title + Name** patterns (e.g., "Dr. Sarah Johnson")
+2. **Known first names** followed by capitalized words
+3. **Known organizations** (Google, Microsoft, NASA, etc.)
+4. **Known locations** (New York, London, Tokyo, etc.)
+5. **Capitalized word heuristics** for unknown entities
+
+## Files
+
+- `index.html` — Main HTML structure with semantic markup
+- `style.css` — Dark theme with responsive design, animations
+- `app.js` — All NLP processing logic and UI rendering
+- `README.md` — This file
+
+## Browser Compatibility
+
+Works in all modern browsers:
+- Chrome / Edge 90+
+- Firefox 88+
+- Safari 14+
+
+## License
+
+MIT
